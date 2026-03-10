@@ -1,15 +1,373 @@
-CREATE TABLE IF NOT EXISTS scans (
+DROP VIEW IF EXISTS dashboard_stats CASCADE;
+
+DROP TABLE IF EXISTS redactions CASCADE;
+DROP TABLE IF EXISTS violations CASCADE;
+DROP TABLE IF EXISTS scans CASCADE;
+DROP TABLE IF EXISTS rules CASCADE;
+DROP TABLE IF EXISTS files CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+
+
+-- =========================================
+-- USERS TABLE
+-- =========================================
+
+CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    scan_type VARCHAR(10),
-    redacted_content TEXT,
+    name TEXT,
+    email TEXT UNIQUE,
+    role VARCHAR(10) DEFAULT 'user',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS violations (
+
+-- =========================================
+-- FILES TABLE
+-- Stores uploaded file metadata
+-- =========================================
+
+CREATE TABLE files (
     id SERIAL PRIMARY KEY,
-    scan_id INTEGER REFERENCES scans(id) ON DELETE CASCADE,
-    type VARCHAR(20),
-    value TEXT
+    user_id INTEGER REFERENCES users(id),
+
+    filename TEXT NOT NULL,
+    file_type VARCHAR(10),
+    file_size INTEGER,
+
+    original_path TEXT,
+    redacted_path TEXT,
+
+    total_violations INTEGER DEFAULT 0,
+    resolved_violations INTEGER DEFAULT 0,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-select * from scans;
+
+-- =========================================
+-- RULES TABLE
+-- Regex detection rules
+-- =========================================
+
+CREATE TABLE rules (
+    id SERIAL PRIMARY KEY,
+
+    rule_name TEXT NOT NULL,
+    description TEXT,
+    regex_pattern TEXT NOT NULL,
+
+    severity VARCHAR(10) DEFAULT 'MEDIUM',
+
+    enabled BOOLEAN DEFAULT TRUE,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+-- =========================================
+-- SCANS TABLE
+-- Each scan event
+-- =========================================
+
+CREATE TABLE scans (
+    id SERIAL PRIMARY KEY,
+
+    file_id INTEGER REFERENCES files(id) ON DELETE CASCADE,
+
+    scan_type VARCHAR(10),
+
+    redacted_content TEXT,
+
+    scan_status VARCHAR(20) DEFAULT 'completed',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+-- =========================================
+-- VIOLATIONS TABLE
+-- Stores detected PII
+-- =========================================
+
+CREATE TABLE violations (
+    id SERIAL PRIMARY KEY,
+
+    scan_id INTEGER REFERENCES scans(id) ON DELETE CASCADE,
+
+    rule_id INTEGER REFERENCES rules(id),
+
+    violation_type VARCHAR(50),
+
+    detected_value TEXT,
+
+    position INTEGER,
+
+    status VARCHAR(20) DEFAULT 'open',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+-- =========================================
+-- REDACTIONS TABLE
+-- Tracks masking / deletion / redaction
+-- =========================================
+
+CREATE TABLE redactions (
+    id SERIAL PRIMARY KEY,
+
+    violation_id INTEGER REFERENCES violations(id) ON DELETE CASCADE,
+
+    action_type VARCHAR(20),
+
+    original_value TEXT,
+
+    redacted_value TEXT,
+
+    performed_by INTEGER REFERENCES users(id),  
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+-- =========================================
+-- DASHBOARD VIEW
+-- Shows violation summary
+-- =========================================
+
+CREATE VIEW dashboard_stats AS
+
+SELECT
+    f.id AS file_id,
+    f.filename,
+
+    COUNT(v.id) AS total_violations,
+
+    COUNT(
+        CASE
+            WHEN v.status = 'resolved'
+            THEN 1
+        END
+    ) AS resolved_violations
+
+FROM files f
+
+LEFT JOIN scans s
+ON s.file_id = f.id
+
+LEFT JOIN violations v
+ON v.scan_id = s.id
+
+GROUP BY f.id, f.filename
+
+ORDER BY f.id DESC;
+
+
+-- =========================================
+-- DEFAULT USERS
+-- =========================================
+
+INSERT INTO users (name, email, role) VALUES,
+('Test User', 'test@gdprscanner.com', 'user');
+
+
+-- =========================================
+-- DEFAULT RULES
+-- =========================================
+
+INSERT INTO rules (rule_name, description, regex_pattern, severity) VALUES
+
+('Email Detection',
+ 'Detect email addresses',
+ '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}',
+ 'HIGH'),
+
+('Indian Phone Number',
+ 'Detect Indian phone numbers',
+ '\b[6-9]\d{9}\b',
+ 'HIGH'),
+
+('Aadhaar Number',
+ 'Detect Aadhaar numbers',
+ '\b\d{4}\s?\d{4}\s?\d{4}\b',
+ 'HIGH'),
+
+('PAN Card',
+ 'Detect PAN numbers',
+ '[A-Z]{5}[0-9]{4}[A-Z]',
+ 'HIGH'),
+
+('Credit Card',
+ 'Detect credit card numbers',
+ '\b(?:\d[ -]*?){13,16}\b',
+ 'CRITICAL'),
+
+('IPv4 Address',
+ 'Detect IP addresses',
+ '\b(?:\d{1,3}\.){3}\d{1,3}\b',
+ 'MEDIUM'),
+
+('URL',
+ 'Detect website URLs',
+ 'https?:\/\/[^\s]+',
+ 'LOW');
+
+
+-- =========================================
+-- PERFORMANCE INDEXES
+-- =========================================
+
+CREATE INDEX idx_files_user_id
+ON files(user_id);
+
+CREATE INDEX idx_scans_file_id
+ON scans(file_id);
+
+CREATE INDEX idx_violations_scan_id
+ON violations(scan_id);
+
+CREATE INDEX idx_violations_rule_id
+ON violations(rule_id);
+
+CREATE INDEX idx_redactions_violation_id
+ON redactions(violation_id);
+
+CREATE INDEX idx_rules_enabled
+ON rules(enabled);
+
+
+
+
+
+
+
+
+
+
+
+
+-- This script was generated by the ERD tool in pgAdmin 4.
+-- Please log an issue at https://github.com/pgadmin-org/pgadmin4/issues/new/choose if you find any bugs, including reproduction steps.
+BEGIN;
+
+
+CREATE TABLE IF NOT EXISTS public.files
+(
+    id serial NOT NULL,
+    user_id integer,
+    filename text COLLATE pg_catalog."default",
+    file_type character varying(10) COLLATE pg_catalog."default",
+    file_size integer,
+    total_violations integer DEFAULT 0, 
+    resolved_violations integer DEFAULT 0,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    redacted_path text COLLATE pg_catalog."default",
+    original_path text COLLATE pg_catalog."default",
+    CONSTRAINT files_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.redactions
+(
+    id serial NOT NULL,
+    violation_id integer,
+    action_type character varying(20) COLLATE pg_catalog."default",
+    performed_by integer,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    original_value text COLLATE pg_catalog."default",
+    redacted_value text COLLATE pg_catalog."default",
+    CONSTRAINT redactions_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.rules
+(
+    id serial NOT NULL,
+    rule_name text COLLATE pg_catalog."default",
+    description text COLLATE pg_catalog."default",
+    regex_pattern text COLLATE pg_catalog."default",
+    severity character varying(10) COLLATE pg_catalog."default",
+    enabled boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    category text COLLATE pg_catalog."default",
+    CONSTRAINT rules_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.scans
+(
+    id serial NOT NULL,
+    scan_type character varying(10) COLLATE pg_catalog."default",
+    redacted_content text COLLATE pg_catalog."default",
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    file_id integer,
+    CONSTRAINT scans_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS public.users
+(
+    id serial NOT NULL,
+    name text COLLATE pg_catalog."default",
+    email text COLLATE pg_catalog."default",
+    role character varying(10) COLLATE pg_catalog."default" DEFAULT 'user'::character varying,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT users_pkey PRIMARY KEY (id),
+    CONSTRAINT users_email_key UNIQUE (email)
+);
+
+CREATE TABLE IF NOT EXISTS public.violations
+(
+    id serial NOT NULL,
+    scan_id integer,
+    type character varying(20) COLLATE pg_catalog."default",
+    value text COLLATE pg_catalog."default",
+    rule_id integer,
+    violation_type text COLLATE pg_catalog."default",
+    detected_value text COLLATE pg_catalog."default",
+    "position" integer,
+    status character varying(20) COLLATE pg_catalog."default" DEFAULT 'open'::character varying,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT violations_pkey PRIMARY KEY (id)
+);
+
+ALTER TABLE IF EXISTS public.files
+    ADD CONSTRAINT files_user_id_fkey FOREIGN KEY (user_id)
+    REFERENCES public.users (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+
+
+ALTER TABLE IF EXISTS public.redactions
+    ADD CONSTRAINT redactions_performed_by_fkey FOREIGN KEY (performed_by)
+    REFERENCES public.users (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+
+
+ALTER TABLE IF EXISTS public.redactions
+    ADD CONSTRAINT redactions_violation_id_fkey FOREIGN KEY (violation_id)
+    REFERENCES public.violations (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+CREATE INDEX IF NOT EXISTS idx_redactions_violation
+    ON public.redactions(violation_id);
+
+
+ALTER TABLE IF EXISTS public.scans
+    ADD CONSTRAINT fk_file FOREIGN KEY (file_id)
+    REFERENCES public.files (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+
+
+ALTER TABLE IF EXISTS public.violations
+    ADD CONSTRAINT fk_rule FOREIGN KEY (rule_id)
+    REFERENCES public.rules (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION;
+
+
+ALTER TABLE IF EXISTS public.violations
+    ADD CONSTRAINT violations_scan_id_fkey FOREIGN KEY (scan_id)
+    REFERENCES public.scans (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE;
+
+END;
