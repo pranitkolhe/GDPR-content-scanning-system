@@ -21,7 +21,6 @@ export default function Violations() {
   const loadViolations = async () => {
 
     try {
-
       const res = await fetchViolationsAPI(id);
 
       setViolations(res.data);

@@ -5,7 +5,8 @@ exports.getScanHistory = async (req, res) => {
   try {
 
     const scans = await documentModel.getAllScans();
-
+    console.log(scans);
+    
     res.json(scans);
 
   } catch (err) {
