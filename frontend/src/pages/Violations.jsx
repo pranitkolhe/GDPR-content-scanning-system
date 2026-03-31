@@ -11,6 +11,8 @@ export default function Violations() {
   const [violations, setViolations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState(null);
+  const [showPendingPopup, setShowPendingPopup] = useState(false);
+
 
   useEffect(() => {
     loadViolations();
@@ -61,9 +63,10 @@ export default function Violations() {
     );
 
     if (hasPendingViolations) {
-      alert("Please resolve all violations before downloading the clean file.");
+      setShowPendingPopup(true);
       return;
     }
+
 
     window.open(`http://localhost:4000/api/download/${id}`, "_blank");
   };
@@ -245,6 +248,89 @@ export default function Violations() {
           </div>
         </div>
       </div>
+      {showPendingPopup && (
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-100 overflow-hidden">
+      <div className="bg-gradient-to-br from-white via-purple-50 to-violet-100 px-6 py-5 border-b border-purple-100 relative overflow-hidden">
+        <div
+          className="absolute inset-0 opacity-20 pointer-events-none"
+          style={{
+            backgroundImage: "radial-gradient(rgba(109,40,217,0.15) 1px, transparent 1px)",
+            backgroundSize: "20px 20px",
+          }}
+        />
+        <div className="relative z-10 flex items-center justify-between">
+          <div>
+            <p className="text-purple-600 font-semibold text-xs uppercase tracking-widest mb-1">
+              Action Required
+            </p>
+            <h2 className="text-lg font-black text-slate-900 tracking-tight">
+              Cannot Download Yet
+            </h2>
+          </div>
+
+          <button
+            onClick={() => setShowPendingPopup(false)}
+            className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1.5 rounded-lg transition-all"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div className="p-6">
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 9v4" />
+              <path d="M12 17h.01" />
+              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            </svg>
+          </div>
+
+          <div>
+            <p className="text-sm font-semibold text-slate-800">
+              Please resolve all violations before downloading the clean file.
+            </p>
+            <p className="text-sm text-slate-500 mt-2">
+              You still have pending violations in this scan. Resolve them first, then try downloading again.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+        <button
+          onClick={() => setShowPendingPopup(false)}
+          className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm rounded-xl shadow-md shadow-purple-200 transition-all duration-200"
+        >
+          Okay
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }
