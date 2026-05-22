@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useUser, useClerk } from "@clerk/clerk-react";
 
-export default function Navbar() {
+export default function AnalystNavbar() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -14,10 +14,7 @@ export default function Navbar() {
 
   const dropdownRef = useRef(null);
 
-  const role = user?.unsafeMetadata?.role;
-
-  // CLOSE DROPDOWN OUTSIDE CLICK
-
+  // Close dropdown on outside click
   useEffect(() => {
 
     const handleClickOutside = (event) => {
@@ -31,10 +28,7 @@ export default function Navbar() {
 
     };
 
-    document.addEventListener(
-      "mousedown",
-      handleClickOutside
-    );
+    document.addEventListener("mousedown", handleClickOutside);
 
     return () =>
       document.removeEventListener(
@@ -45,74 +39,25 @@ export default function Navbar() {
   }, []);
 
   // ─────────────────────────────────────────────
-  // NAV LINKS
+  // ANALYST LINKS
   // ─────────────────────────────────────────────
 
-  const adminLinks = [
-    { to: "/", label: "Home" },
-    { to: "/dashboard", label: "Dashboard" },
-  ];
-
   const analystLinks = [
-    { to: "/analyst-dashboard", label: "Home" },
-    { to: "/dashboard", label: "Dashboard" },
+    {
+      to: "/analyst-dashboard",
+      label: "Home",
+    },
+    {
+      to: "/violations",
+      label: "Violations",
+    },
   ];
 
-  const publicLinks = [
-    { to: "/", label: "Home" },
-  ];
-
-  const getLinks = () => {
-
-    if (!isSignedIn) return publicLinks;
-
-    if (role === "admin") return adminLinks;
-
-    if (role === "analyst") return analystLinks;
-
-    return publicLinks;
-
-  };
-
-  // ACTIVE PAGE FILTERING
-
+  // Hide current page button
   const visibleLinks =
-    getLinks().filter((link) => {
-
-      // ADMIN HOME
-      if (
-        location.pathname === "/" &&
-        link.to === "/"
-      ) {
-        return false;
-      }
-
-      // ANALYST HOME
-      if (
-        location.pathname === "/analyst-dashboard" &&
-        link.to === "/analyst-dashboard"
-      ) {
-        return false;
-      }
-
-      // DASHBOARD
-      if (
-        location.pathname === "/dashboard" &&
-        link.to === "/dashboard"
-      ) {
-        return false;
-      }
-
-      return true;
-
-    });
-
-  // SCAN BUTTON
-
-  const shouldShowScan =
-    isSignedIn &&
-    role === "admin" &&
-    location.pathname !== "/scan";
+    analystLinks.filter(
+      (link) => link.to !== location.pathname
+    );
 
   // ─────────────────────────────────────────────
   // ICONS
@@ -120,48 +65,39 @@ export default function Navbar() {
 
   const getIcon = (label) => {
 
-    // HOME
-
     if (label === "Home") {
 
       return (
-
         <svg
-          width="15"
-          height="15"
+          width="16"
+          height="16"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth="2.5"
+          strokeWidth="2.3"
         >
           <path d="M3 10.5L12 3l9 7.5"/>
           <path d="M5 9.5V21h14V9.5"/>
         </svg>
-
       );
 
     }
 
-    // DASHBOARD
-
-    if (label === "Dashboard") {
+    if (label === "Violations") {
 
       return (
-
         <svg
-          width="15"
-          height="15"
+          width="16"
+          height="16"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth="2.5"
+          strokeWidth="2.3"
         >
-          <rect x="3" y="3" width="7" height="7" rx="1"/>
-          <rect x="14" y="3" width="7" height="7" rx="1"/>
-          <rect x="3" y="14" width="7" height="7" rx="1"/>
-          <rect x="14" y="14" width="7" height="7" rx="1"/>
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <circle cx="12" cy="16" r="1"/>
         </svg>
-
       );
 
     }
@@ -177,13 +113,7 @@ export default function Navbar() {
         {/* LOGO */}
 
         <Link
-          to={
-            isSignedIn
-              ? role === "analyst"
-                ? "/analyst-dashboard"
-                : "/"
-              : "/"
-          }
+          to="/analyst-dashboard"
           className="flex items-center gap-2 font-bold text-lg text-white hover:text-purple-300 transition-colors no-underline"
         >
 
@@ -195,11 +125,11 @@ export default function Navbar() {
 
         </Link>
 
-        {/* DESKTOP NAV */}
+        {/* DESKTOP */}
 
         <div className="hidden md:flex gap-3 items-center">
 
-          {/* NAVIGATION LINKS */}
+          {/* NAV LINKS */}
 
           {visibleLinks.map(({ to, label }) => (
 
@@ -217,70 +147,16 @@ export default function Navbar() {
 
           ))}
 
-          {/* SCAN BUTTON */}
-
-          {shouldShowScan && (
-
-            <Link
-              to="/scan"
-              className="flex items-center gap-2 text-sm font-bold text-white border border-transparent bg-purple-600 hover:bg-purple-700 hover:border-purple-400 px-4 py-2 rounded-lg transition-all duration-200 no-underline"
-            >
-
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <circle cx="11" cy="11" r="7"/>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-              </svg>
-
-              Scan
-
-            </Link>
-
-          )}
-
-          {/* RULES BUTTON */}
-
-          {role === "admin" &&
-            location.pathname !== "/rules" && (
-
-            <Link
-              to="/rules"
-              className="flex items-center gap-2 text-sm font-bold text-white border border-transparent bg-purple-600 hover:bg-purple-700 hover:border-purple-400 px-4 py-2 rounded-lg transition-all duration-200 no-underline"
-            >
-
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              </svg>
-
-              Rules
-
-            </Link>
-
-          )}
-
           {/* PROFILE */}
 
-          {isSignedIn ? (
+          {isSignedIn && (
 
             <div
               className="relative"
               ref={dropdownRef}
             >
 
-              {/* USER BUTTON */}
+              {/* PROFILE BUTTON */}
 
               <button
                 onClick={() =>
@@ -335,14 +211,8 @@ export default function Navbar() {
                         Role
                       </span>
 
-                      <span className={`text-xs font-bold px-3 py-1 rounded-full ${
-                        role === "admin"
-                          ? "bg-purple-100 text-purple-700"
-                          : "bg-blue-100 text-blue-700"
-                      }`}>
-
-                        {role}
-
+                      <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-100 text-blue-700">
+                        Analyst
                       </span>
 
                     </div>
@@ -379,31 +249,81 @@ export default function Navbar() {
 
             </div>
 
-          ) : (
+          )}
 
-            <div className="flex items-center gap-2">
+        </div>
 
-              <Link
-                to="/login"
-                className="text-sm font-bold text-white border border-white/20 hover:border-purple-400 px-4 py-2 rounded-lg transition-all duration-200 no-underline"
+        {/* MOBILE MENU BUTTON */}
+
+        <button
+          className="md:hidden flex flex-col gap-1.5 p-2 rounded-lg hover:bg-purple-600/20 transition-colors"
+          onClick={() => setMenuOpen((o) => !o)}
+        >
+
+          <span className={`block w-5 h-0.5 bg-white transition-all duration-300 ${menuOpen ? "rotate-45 translate-y-2" : ""}`} />
+
+          <span className={`block w-5 h-0.5 bg-white transition-all duration-300 ${menuOpen ? "opacity-0" : ""}`} />
+
+          <span className={`block w-5 h-0.5 bg-white transition-all duration-300 ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`} />
+
+        </button>
+
+      </div>
+
+      {/* MOBILE MENU */}
+
+      {menuOpen && (
+
+        <div className="md:hidden mt-3 flex flex-col gap-2 border-t border-gray-800 pt-3 px-6">
+
+          {visibleLinks.map(({ to, label }) => (
+
+            <Link
+              key={to}
+              to={to}
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center justify-center gap-2 text-sm font-bold text-white border border-transparent bg-purple-600 hover:bg-purple-700 px-4 py-2.5 rounded-lg transition-all duration-200 text-center no-underline"
+            >
+
+              {getIcon(label)}
+
+              {label}
+
+            </Link>
+
+          ))}
+
+          {/* SIGN OUT */}
+
+          {isSignedIn && (
+
+            <button
+              onClick={() => signOut()}
+              className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl mt-2 flex items-center justify-center gap-2"
+            >
+
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
               >
-                Login
-              </Link>
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
 
-              <Link
-                to="/register"
-                className="text-sm font-bold text-white bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg transition-all duration-200 no-underline"
-              >
-                Register
-              </Link>
+              Sign Out
 
-            </div>
+            </button>
 
           )}
 
         </div>
 
-      </div>
+      )}
 
     </nav>
 

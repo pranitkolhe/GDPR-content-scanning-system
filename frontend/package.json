@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.61.5",
     "@tailwindcss/vite": "^4.1.18",
     "axios": "^1.13.6",
     "react": "^18.2.0",

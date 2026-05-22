@@ -3,3 +3,12 @@
 /* @tailwind base;
 @tailwind components;
 @tailwind utilities; */
+
+.cl-footer {
+  display: none !important;
+}
+
+
+.cl-internal-b3fm6y {
+  display: none !important;
+}
