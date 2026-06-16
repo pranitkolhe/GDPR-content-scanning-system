@@ -1,7 +1,9 @@
 import axios from "axios";
 
+export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+
 const api = axios.create({
-  baseURL: "http://localhost:4000"
+  baseURL: API_URL
 });
 
 export default api;
@@ -35,18 +37,12 @@ export const fetchScanHistoryAPI = () => {
 
 /* ---------- VIOLATIONS ---------- */
 
-export const fetchViolationsAPI = (scanId) => {
+export const fetchAllViolationsAPI = () => {
+  return api.get("/api/violations");
+};
 
-  // ANALYST PAGE → GET ALL
-  if (!scanId) {
-    return api.get("/api/violations");
-  }
-
-  // ADMIN PAGE → GET ONE SCAN
-  return api.get(
-    `/api/scans/${scanId}/violations`
-  );
-
+export const fetchScanViolationsAPI = (scanId) => {
+  return api.get(`/api/scans/${scanId}/violations`);
 };
 
 /* ---------- VIOLATION MANAGEMENT ---------- */

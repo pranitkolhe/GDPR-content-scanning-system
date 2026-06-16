@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
-  fetchViolationsAPI,
+  fetchScanViolationsAPI,
   updateViolationAPI
 } from "../services/api";
 
@@ -21,7 +21,7 @@ export default function Violations() {
   const loadViolations = async () => {
     try {
       setLoading(true);
-      const res = await fetchViolationsAPI(id);
+      const res = await fetchScanViolationsAPI(id);
       setViolations(res.data || []);
     } catch (err) {
       console.error("VIOLATION LOAD ERROR", err);

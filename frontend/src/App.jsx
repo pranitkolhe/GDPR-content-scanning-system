@@ -16,6 +16,7 @@ import Scan from "./pages/Scan";
 import Dashboard from "./pages/Dashboard";
 import Rules from "./pages/Rules";
 import Violations from "./pages/Violations";
+import AnalystViolations from "./pages/AnalystViolations";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AuthRedirect from "./pages/AuthRedirect";
@@ -124,7 +125,7 @@ function AppContent() {
             path="/violations"
             element={
               <ProtectedRoute allowedRoles={["analyst"]}>
-                <Violations />
+                <AnalystViolations />
               </ProtectedRoute>
             }
           />
