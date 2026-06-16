@@ -8,7 +8,13 @@ const violationRoutes = require("./src/routes/violation.routes");
 const redactionRoutes = require("./src/routes/redaction.routes");
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 
