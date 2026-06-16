@@ -21,15 +21,36 @@ const allowedMimeTypes = [
 
 const storage = multer.diskStorage({
 
-  destination: "../storage/temp_file",
+  // destination: "../storage/temp_file",
 
-  filename: (req, file, cb) => {
+    destination: (req, file, cb) => {
 
-    const uniqueName =
-      Date.now() + "-" + file.originalname;
+        const uploadDir = path.join(
+            process.cwd(),
+            "storage",
+            "temp_file"
+        );
 
-    cb(null, uniqueName);
-  }
+        fs.mkdirSync(
+            uploadDir,
+            {
+                recursive: true
+            }
+        );
+
+        cb(
+            null,
+            uploadDir
+        );
+
+    },
+    filename: (req, file, cb) => {
+
+        const uniqueName =
+          Date.now() + "-" + file.originalname;
+
+        cb(null, uniqueName);
+      }
 
 });
 
