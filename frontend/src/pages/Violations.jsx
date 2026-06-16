@@ -67,8 +67,8 @@ export default function Violations() {
       return;
     }
 
-
-    window.open(`http://localhost:4000/api/download/${id}`, "_blank");
+    window.open(`${import.meta.env.VITE_API_URL}/api/download/${id}`, "_blank");
+    // window.open(`http://localhost:4000/api/download/${id}`, "_blank");
   };
 
   const getStatusBadge = (status) => {

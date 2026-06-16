@@ -33,7 +33,7 @@ exports.generateRedactedFile = async (req, res) => {
     console.log("File path is: ",filePath);
 
     const aiResponse = await axios.post(
-      "http://localhost:8001/generate-redacted-file",
+      `${process.env.AI_SERVICE_URL}/generate-redacted-file`,
       {
         scan_id: parseInt(scanId),
         file_path: filePath

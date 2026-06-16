@@ -75,7 +75,7 @@ exports.scanText = async (req, res) => {
 
     // Forward ruleIds to your Python Scanning Engine (8001)
     const response = await axios.post(
-      "http://localhost:8001/scan-text",
+      `${process.env.AI_SERVICE_URL}/scan-text`,
       { text, ruleIds } 
     );
 
@@ -117,7 +117,7 @@ exports.scanFile = async (req, res) => {
     formData.append("ruleIds", JSON.stringify(ruleIds));
 
     const response = await axios.post(
-      "http://localhost:8001/scan-file",
+      `${process.env.AI_SERVICE_URL}/scan-file`,
       formData,
       { headers: formData.getHeaders() }
     );
